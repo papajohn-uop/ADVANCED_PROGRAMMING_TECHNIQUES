@@ -4,6 +4,16 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List
 
+
+class Memo(BaseModel):
+    Title: str
+    Content: str
+
+class Error(BaseModel):
+    code: int
+    reason: str
+
+
 app = FastAPI()
 
 
@@ -19,6 +29,17 @@ async def root():
 
 
 
-@app.get("/getNotes")
+@app.get("/getNotes",
+    response_model=List[Memo], 
+    responses={404: {"model": Error}},
+    tags=["READ"],
+    summary="List current memos",
+
+)
 async def getNotes():
-    return my_memos
+    my_memos_list=list()
+    for key, value in my_memos.items() :
+        print (key, value)
+        tmp_memo=Memo(Title=key,Content=value)
+        my_memos_list.append(tmp_memo)
+    return my_memos_list
