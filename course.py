@@ -61,3 +61,30 @@ async def getNote(memo_title):
     else:
         error=Error(code=404,reason="This memo does not exist")
         return JSONResponse(status_code=404, content={"code": error.code,"reason":error.reason})
+
+
+
+#create a new memo
+@app.post("/createNote",
+    response_model=List[Memo], 
+    responses={
+        401: {"model": Error},
+        422: {"model": Error}
+        },
+    tags=["WRITE"],
+    summary="Create a new memo",
+  )
+async def insertNote(new_memo:Memo):
+    print(new_memo.Title)
+    if new_memo.Title in my_memos:
+        error=Error(code=422,reason="This memo already exists")
+        return JSONResponse(status_code=422, content={"code": error.code,"reason":error.reason})
+    else:
+        #append new memo in memo list
+        my_memos[new_memo.Title]=new_memo.Content
+        my_memos_list=list()
+        for key, value in my_memos.items() :
+            print (key, value)
+            tmp_memo=Memo(Title=key,Content=value)
+            my_memos_list.append(tmp_memo)
+        return my_memos_list
