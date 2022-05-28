@@ -88,3 +88,36 @@ async def insertNote(new_memo:Memo):
             tmp_memo=Memo(Title=key,Content=value)
             my_memos_list.append(tmp_memo)
         return my_memos_list
+
+
+ #modify an existing memo
+@app.patch("/modifyNote/{memo_title}",
+    response_model=List[Memo], 
+    responses={
+        401: {"model": Error},
+        422: {"model": Error}
+        },
+    tags=["WRITE"],
+    summary="Modify an existing memo",
+  )
+async def modifyNote(memo_title, change_memo:Memo):
+    if memo_title not in my_memos:
+        error=Error(code=422,reason="No such memo")
+        return JSONResponse(status_code=422, content={"code": error.code,"reason":error.reason})
+    else:
+        #modiy memo entry in memo list
+        #check if title of new memo is the same
+        if memo_title==change_memo.Title:
+            #Same title update content
+            my_memos[memo_title]=change_memo.Content
+        else:
+            #change Title,remove entry and create new one
+            my_memos.pop(memo_title)
+            my_memos[change_memo.Title]=change_memo.Content
+
+        my_memos_list=list()
+        for key, value in my_memos.items() :
+            print (key, value)
+            tmp_memo=Memo(Title=key,Content=value)
+            my_memos_list.append(tmp_memo)
+        return my_memos_list
