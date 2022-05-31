@@ -1,0 +1,78 @@
+version: '3.6'
+networks:
+  demo_net:
+services:
+  memo_server:
+    container_name: memo_server
+    build:
+      context: .
+    ports:
+      - "20000:10000"
+    depends_on:
+       - mongodb
+       - mysql
+    command: uvicorn course:app --host 0.0.0.0 --port 10000 
+
+  mysql:
+    image: mysql:5.7.16
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: someDB
+      MYSQL_USER: someUser
+      MYSQL_PASSWORD: somePass
+      MYSQL_ROOT_PASSWORD: someRootPass
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - demo_net
+
+  phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      links:
+        - mysql
+      environment:
+        PMA_HOST: mysql
+        PMA_PORT: 3306
+        PMA_ARBITRARY: 1
+      restart: always
+      ports:
+        - 8183:80
+      networks:
+        - demo_net
+      volumes:
+        - ./up.ini:/usr/local/etc/php/php.ini
+
+  mongodb:
+      image: mongo
+      container_name: mongodb
+      ports:
+        - 27017:27017
+      environment:
+        - MONGO_INITDB_ROOT_USERNAME=r00tusEr
+        - MONGO_INITDB_ROOT_PASSWORD=r00tpAss
+      volumes:
+        - mongodb-data:/data/db
+
+  mongo-express:
+      image: mongo-express
+      restart: always
+      container_name: mongo-express
+      ports:
+        - 8081:8081
+      environment:
+        - ME_CONFIG_MONGODB_ADMINUSERNAME=r00tusEr
+        - ME_CONFIG_MONGODB_ADMINPASSWORD=r00tpAss
+        - ME_CONFIG_MONGODB_SERVER=mongodb
+        - ME_CONFIG_MONGODB_PORT=27017
+      depends_on:
+        - mongodb
+volumes:
+  mongodb-data:
+  # https://stackoverflow.com/questions/54911021/unable-to-start-docker-mongo-image-on-windows
+
